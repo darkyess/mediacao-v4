@@ -1,0 +1,3 @@
+# Copie este arquivo para ".dev.vars" (sem o .example) e troque pelo valor da sua chave.
+# O arquivo ".dev.vars" NUNCA deve ser enviado ao GitHub (já está no .gitignore).
+GEMINI_API_KEY=cole_sua_chave_aqui

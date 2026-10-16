@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediAção — Assistente de Atendimento em Saúde</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <!-- dois círculos que se encontram: a ideia de "mediação" -->
+    <svg class="mark" viewBox="0 0 32 24" width="32" height="24" aria-hidden="true"><circle class="c1" cx="11" cy="12" r="9"/><circle class="c2" cx="21" cy="12" r="9"/></svg>
+    <span class="wordmark">MediAção</span>
+  </div>
+  <div class="badge">Projeto escolar • V1</div>
+</header>
+
+<main>
+  <section id="home" class="screen active">
+    <div class="hero">
+      <div class="hero-copy">
+        <h1>Prepare-se melhor para o seu atendimento.</h1>
+        <p>Organize sintomas, prepare sua consulta e receba orientações gerais sobre qual tipo de atendimento procurar.</p>
+        <div class="warning">O MediAção não diagnostica doenças nem substitui profissionais de saúde.</div>
+      </div>
+      <div class="hero-card">
+        <h3>Como podemos ajudar?</h3>
+        <button class="primary" onclick="openChat('sintomas')">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>
+          <span>Estou com sintomas</span>
+        </button>
+        <button onclick="openChat('consulta')">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+          <span>Vou ao médico</span>
+        </button>
+        <button onclick="openChat('atendimento')">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 20.5v-12L12 4l7.5 4.5v12M2.5 20.5h19M12 10v6M9 13h6"/></svg>
+          <span>Qual atendimento procurar?</span>
+        </button>
+        <button onclick="openChat('organizar')">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 3h6v3H9zM9 11h6M9 15h6"/></svg>
+          <span>Organizar meus sintomas</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="chat" class="screen">
+    <div class="chat-shell">
+      <div class="section-head">
+        <div>
+          <h2>Conversa com o MediAção</h2>
+          <p class="progress-label" id="progressLabel"></p>
+        </div>
+        <button class="ghost" onclick="goHome()"><span aria-hidden="true">←</span> Início</button>
+      </div>
+      <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+      <div id="chatBox" class="chat-box" role="log" aria-live="polite" aria-label="Conversa com o MediAção" tabindex="0"></div>
+      <div id="options" class="options" role="group" aria-label="Opções de resposta"></div>
+      <div id="aiBox" class="ai-box" hidden>
+        <p id="aiNotice" class="ai-notice"><strong>Demonstração escolar.</strong> O texto que você escrever será enviado a um serviço de IA do Google (plano gratuito), que pode usá-lo para melhorar seus produtos. Não escreva nome, documentos ou outros dados pessoais reais.</p>
+        <label for="aiText" class="ai-label">Descreva com suas palavras</label>
+        <textarea id="aiText" maxlength="800" rows="4" aria-describedby="aiNotice aiCount" placeholder="Ex.: dor de cabeça desde ontem, piorando à noite"></textarea>
+        <div id="aiCount" class="ai-count">0/800</div>
+        <label class="ai-consent"><input type="checkbox" id="aiConsent"><span>Entendi o aviso e concordo em enviar este texto.</span></label>
+        <div class="ai-actions">
+          <button type="button" id="aiSend" class="ai-primary" disabled>Organizar com IA</button>
+          <button type="button" id="aiSkip">Prefiro responder por perguntas</button>
+        </div>
+        <p id="aiStatus" class="ai-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="chat-footer">
+        <button class="ghost" id="backBtn" onclick="goBack()" disabled><span aria-hidden="true">←</span> Voltar uma pergunta</button>
+        <button class="ghost" onclick="restartChat()"><span aria-hidden="true">↻</span> Reiniciar</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="result" class="screen">
+    <div class="result-card">
+      <div class="ficha-head">
+        <span class="ficha-brand">MediAção</span>
+        <span>Data: <span id="fichaDate"></span></span>
+      </div>
+      <div class="ficha-body">
+        <h2>Resumo para o atendimento</h2>
+        <div id="urgency"></div>
+        <div id="summary"></div>
+        <div id="guide"></div>
+        <div class="actions">
+          <button class="primary" onclick="copySummary()">Copiar resumo</button>
+          <button onclick="reviewAnswers()">Corrigir respostas</button>
+          <button onclick="goHome()">Voltar ao início</button>
+        </div>
+        <div id="copyStatus" class="copy-status" role="status" aria-live="polite"></div>
+        <div id="copyFallback"></div>
+        <p class="small">Este resumo é apenas informativo. Um profissional de saúde deve avaliar a situação.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="screen">
+    <div class="about">
+      <h2>Sobre o projeto</h2>
+      <div class="info-grid">
+        <article><h3>Objetivo</h3><p>Ajudar o usuário a organizar informações antes de procurar atendimento.</p></article>
+        <article><h3>Privacidade</h3><p>Por padrão, os dados ficam somente no navegador. Se você escolher o passo opcional com IA, o texto que escrever é enviado a um serviço de IA do Google (plano gratuito), que pode usá-lo para melhorar seus produtos. Por isso, não escreva dados pessoais reais.</p></article>
+        <article><h3>Limite da IA</h3><p>A IA só organiza o texto que você escreveu e você confere o resultado. Os sinais de alerta seguem regras fixas, e nada aqui faz diagnóstico médico.</p></article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <button onclick="show('home')">Início</button>
+  <button onclick="show('about')">Sobre o projeto</button>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>

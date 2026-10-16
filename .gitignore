@@ -1,0 +1,5 @@
+# Nunca suba a chave da API
+.dev.vars
+.env
+node_modules/
+.wrangler/
