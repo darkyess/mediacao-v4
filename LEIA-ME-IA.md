@@ -50,7 +50,26 @@ Abra o site publicado → **Estou com sintomas** → **Nenhum desses**. Deve apa
 Se o Google mudar o nome do modelo, troque sem mexer no código: crie a variável `GEMINI_MODEL`
 (ex.: `gemini-3.1-flash-lite`). O padrão é `gemini-3.5-flash-lite`.
 
-## 5. Privacidade e segurança (importante)
+## 5. (Recomendado) Proteger a cota com o Turnstile
+
+A função só aceita pedidos do próprio site, mas um script pode falsificar isso e gastar o limite diário da sua chave.
+O Cloudflare Turnstile (gratuito) é uma verificação anti-robô que bloqueia esse abuso. É opcional: sem ele, tudo funciona igual.
+
+1. No Cloudflare: **Turnstile → Add widget**. Em *Hostname*, coloque o endereço do site (ex.: `mediacao.pages.dev`). Modo: **Managed**.
+2. Copie a **Site Key** (pública) e a **Secret Key** (secreta).
+3. No projeto do Pages: **Settings → Variables and Secrets**:
+   - `TURNSTILE_SITE_KEY` = Site Key (pode ser tipo *Text*);
+   - `TURNSTILE_SECRET_KEY` = Secret Key (tipo **Secret**).
+4. Faça um novo deploy. A caixa "Descreva com suas palavras" passa a mostrar a verificação antes do botão "Organizar com IA".
+
+Para testar no computador, use as chaves de teste do Cloudflare já indicadas em `.dev.vars.example`.
+
+| O que você vê | Provável causa |
+|---|---|
+| Verificação não aparece | `TURNSTILE_SITE_KEY` ausente, ou falta refazer o deploy. |
+| "Não consegui organizar seu relato" sempre, com Turnstile | `TURNSTILE_SECRET_KEY` errada ou hostname do widget diferente do site. |
+
+## 6. Privacidade e segurança (importante)
 
 - No plano **gratuito** do Google, o conteúdo enviado **pode ser usado para melhorar os produtos deles**.
   Por isso o site mostra um aviso e pede consentimento antes de enviar, e orienta a **não escrever dados pessoais reais**.
@@ -60,6 +79,6 @@ Se o Google mudar o nome do modelo, troque sem mexer no código: crie a variáve
 - A função não grava nem registra o texto da pessoa.
 - Se a chave vazar, apague-a em https://aistudio.google.com/apikey e crie outra.
 
-## 6. Desligar a IA
+## 7. Desligar a IA
 
 Apague o secret `GEMINI_API_KEY` ou a pasta `functions/`. O passo some sozinho e o resto continua igual.

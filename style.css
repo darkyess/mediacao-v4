@@ -60,7 +60,7 @@ button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
 .hero p{font-size:19px;line-height:1.6;color:var(--tinta-2);max-width:50ch;margin:0}
 .warning{margin-top:28px;max-width:50ch;padding:14px 18px;border-left:4px solid var(--ambar);background:var(--ambar-claro);color:var(--ambar-texto);font-size:15px;border-radius:4px 12px 12px 4px}
 .hero-card{padding:30px}
-.hero-card h3{font-size:24px;margin-bottom:18px}
+.hero-card h2{font-size:24px;margin-bottom:18px}
 .hero-card button{display:flex;align-items:center;gap:14px;width:100%;min-height:56px;padding:14px 18px;margin-top:10px;border:1.5px solid var(--linha);border-radius:14px;background:var(--folha);text-align:left;font-weight:600;transition:background-color var(--dur),border-color var(--dur),transform .12s}
 .hero-card button:hover{background:var(--azul-claro);border-color:var(--azul)}
 .hero-card button:active{transform:scale(.985)}
@@ -159,6 +159,7 @@ button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
 
 /* ---------- Rodapé ---------- */
 footer{height:60px;background:var(--folha);border-top:1px solid var(--linha);display:flex;justify-content:center;gap:28px;align-items:center}
+footer nav{display:flex;gap:28px;align-items:center}
 footer button{min-height:44px;padding:9px 14px;border-radius:10px;color:var(--tinta-2);transition:background-color var(--dur),color var(--dur)}
 footer button:hover{background:var(--azul-claro);color:var(--tinta)}
 
@@ -170,8 +171,8 @@ footer button:hover{background:var(--azul-claro);color:var(--tinta)}
   .hero-copy{display:contents}
   .hero h1{order:1;margin-bottom:0}
   .hero p{order:2;font-size:17px}
-  .hero-card{order:3}
-  .warning{order:4;margin-top:0}
+  .warning{order:3;margin-top:0}
+  .hero-card{order:4}
   .hero-card{padding:22px}
   .section-head{padding:20px 20px 14px}
   .section-head h2{font-size:21px}
@@ -221,4 +222,20 @@ footer button:hover{background:var(--azul-claro);color:var(--tinta)}
   .ai-actions button{width:100%}
   .chat-shell:has(.ai-box:not([hidden])) .chat-box{height:clamp(96px,16vh,150px)}
   .ai-notice{font-size:13px}
+}
+
+/* ---------- V4 ---------- */
+.noscript{max-width:720px;margin:24px auto;padding:14px 18px;border-left:4px solid var(--alerta);border-radius:4px 12px 12px 4px;background:var(--alerta-claro);color:var(--alerta-texto);font-weight:600}
+.ai-captcha{margin-top:12px;min-height:65px}
+.ai-captcha[hidden]{display:none}
+
+/* ---------- Impressão: só a ficha do resumo ---------- */
+@media print{
+  @page{margin:16mm}
+  body{background:#fff;font-size:12pt}
+  .topbar,footer,.actions,.copy-status,#copyFallback,.screen:not(#result){display:none!important}
+  #result{display:block!important;min-height:0;padding:0;animation:none}
+  .result-card{box-shadow:none;border:1px solid #999;border-radius:8px}
+  .urgency,.guide,.summary-row{break-inside:avoid}
+  .checklist input[type=checkbox]{appearance:none;-webkit-appearance:none;width:12px;height:12px;border:1px solid #333;border-radius:2px}
 }

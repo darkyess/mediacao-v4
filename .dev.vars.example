@@ -1,3 +1,7 @@
 # Copie este arquivo para ".dev.vars" (sem o .example) e troque pelo valor da sua chave.
 # O arquivo ".dev.vars" NUNCA deve ser enviado ao GitHub (já está no .gitignore).
 GEMINI_API_KEY=cole_sua_chave_aqui
+
+# (Opcional) Verificação anti-robô do Cloudflare Turnstile. Deixe comentado para não usar.
+# TURNSTILE_SITE_KEY=1x00000000000000000000AA
+# TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

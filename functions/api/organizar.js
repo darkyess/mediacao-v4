@@ -9,7 +9,7 @@
 
 const MODELO_PADRAO = "gemini-3.5-flash-lite"; // pode ser trocado pela variável GEMINI_MODEL
 const MAX_CHARS = 800;
-const MAX_BYTES_CORPO = 4000;
+const MAX_BYTES_CORPO = 6000; // relato (até 800 caracteres) + token opcional do Turnstile
 const TIMEOUT_MS = 12000;
 
 export const INSTRUCOES = `Você organiza o relato de uma pessoa antes de um atendimento de saúde, para montar um resumo que ela levará ao profissional. Você NÃO é médico.
@@ -97,6 +97,24 @@ export function validarSaida(o) {
   return { motivo, inicio, piorando, observacoes, possivel_sinal_de_alerta: o.possivel_sinal_de_alerta === true };
 }
 
+// ---------- Verificação anti-robô (opcional) ----------
+// Se a variável secreta TURNSTILE_SECRET_KEY existir, cada pedido precisa de um token válido do
+// Cloudflare Turnstile. Isso impede que scripts gastem a cota da chave da IA chamando /api/organizar direto.
+export async function verificarTurnstile(token, segredo, ip) {
+  if (typeof token !== "string" || !token || token.length > 2048) return false;
+  const form = new FormData();
+  form.append("secret", segredo);
+  form.append("response", token);
+  if (ip) form.append("remoteip", ip);
+  try {
+    const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body: form });
+    const j = await r.json();
+    return Boolean(j && j.success);
+  } catch {
+    return false;
+  }
+}
+
 // ---------- Rota ----------
 
 export async function onRequestPost({ request, env }) {
@@ -116,12 +134,22 @@ export async function onRequestPost({ request, env }) {
   if (bruto.length > MAX_BYTES_CORPO) return resposta(400, { ok: false, erro: "entrada" });
 
   let texto = null;
+  let tokenCaptcha = null;
   try {
-    texto = validarEntrada(JSON.parse(bruto).texto);
+    const corpo = JSON.parse(bruto);
+    texto = validarEntrada(corpo.texto);
+    tokenCaptcha = corpo.captcha;
   } catch {
     texto = null;
   }
   if (!texto) return resposta(400, { ok: false, erro: "entrada" });
+
+  // A checagem de Origin acima só barra navegadores de outros sites; scripts podem falsificá-la.
+  // Por isso, quando configurado, exigimos também o Turnstile.
+  if (env && env.TURNSTILE_SECRET_KEY) {
+    const ok = await verificarTurnstile(tokenCaptcha, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP"));
+    if (!ok) return resposta(403, { ok: false, erro: "captcha" });
+  }
 
   if (!env || !env.GEMINI_API_KEY) {
     console.error("GEMINI_API_KEY não configurada");

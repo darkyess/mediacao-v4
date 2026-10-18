@@ -1,9 +1,9 @@
-// MediAção — V1
+// MediAção — V4
 // Cada pergunta tem um `id` e um `label` próprios. O resumo e o alerta de
 // emergência dependem desses campos (e do marcador `redFlag` nas opções),
 // nunca da posição da pergunta dentro do fluxo.
 
-const state = { mode: "", step: 0, answers: [], aiItem: null, aiBusy: false, aiToken: 0, aiUnavailable: false, batch: 0 };
+const state = { mode: "", step: 0, answers: [], aiItem: null, aiBusy: false, aiToken: 0, aiUnavailable: false, batch: 0, confirming: false };
 
 const chatBox = () => document.getElementById("chatBox");
 const optionsBox = () => document.getElementById("options");
@@ -11,7 +11,8 @@ const optionsBox = () => document.getElementById("options");
 // ---------- Definição dos fluxos ----------
 const info = (text) => ({ type: "info", text });
 const ask = (id, label, text, options) => ({ type: "question", id, label, text, options });
-const opt = (text, redFlag = false) => ({ text, redFlag });
+// cvv: true quando a opção deve mostrar também o CVV (apoio emocional)
+const opt = (text, redFlag = false, cvv = false) => ({ text, redFlag, cvv });
 const opts = (...texts) => texts.map((t) => opt(t));
 // Passo opcional em que a pessoa descreve o que sente e a IA organiza. `covers` = perguntas que ele substitui.
 const freeText = (text, covers) => ({ type: "freeText", text, covers });
@@ -27,6 +28,8 @@ const EMERGENCY_RESULT_TEXT =
 
 const ALERT_RELATO_TEXT =
   `Seu relato menciona algo que pode ser um sinal de alerta. Se for uma emergência, ligue agora para o SAMU (${SAMU}). Se você está pensando em se machucar ou em tirar a própria vida, ligue para o CVV (${CVV}), 24 horas e gratuito. Você não precisa passar por isso sozinho(a).`;
+const EMERGENCY_CVV_TEXT =
+  `Obrigado por contar. Você não precisa passar por isso sozinho(a). Ligue agora para o CVV (${CVV}), 24 horas e gratuito, ou fale com alguém de confiança por perto. Se você já se machucou ou corre perigo agora, ligue para o SAMU (${SAMU}).`;
 const AI_FAIL_TEXT = "Não consegui organizar seu relato agora. Sem problema: vamos pelas perguntas.";
 const AI_ENDPOINT = "/api/organizar";
 const AI_MAX_CHARS = 800;
@@ -39,19 +42,26 @@ const optg = (text, g) => ({ text, redFlag: false, guide: g });
 
 const DOC_ITEM = "Documento com foto e Cartão SUS (se o atendimento for pelo SUS) ou carteirinha do plano de saúde";
 const MEDS_ITEM = "Lista dos medicamentos que você usa (nome, dose e horário) e das alergias conhecidas";
-const SAMU_NOTE = `Se surgir dificuldade para respirar, desmaio, sangramento intenso ou dor muito forte ou súbita, não espere: ligue para o SAMU (${SAMU}).`;
+const SAMU_NOTE = `Se surgir dificuldade para respirar, dor no peito, desmaio, sinais de AVC, sangramento intenso ou dor muito forte ou súbita, não espere: ligue para o SAMU (${SAMU}).`;
+
+// Pergunta de sinais de alerta, usada em todos os fluxos que tratam de sintomas.
+const alertaQuestion = () =>
+  ask("alerta", "Sinal de alerta", "Primeiro, uma pergunta importante: você está com algum destes sinais de alerta agora?", [
+    opt("Dificuldade para respirar", true),
+    opt("Dor ou aperto no peito", true),
+    opt("Desmaio, convulsão ou confusão importante", true),
+    opt("Rosto torto, fala enrolada ou fraqueza de um lado do corpo", true),
+    opt("Sangramento intenso", true),
+    opt("Dor muito forte ou súbita", true),
+    opt("Pensamentos de se machucar ou de tirar a própria vida", true, true),
+    opt("Nenhum desses"),
+  ]);
 
 const flows = {
   sintomas: [
     info("Olá! Vou ajudar você a organizar algumas informações. Não vou diagnosticar doenças."),
     // O alerta vem primeiro: quem está em emergência não deve responder várias perguntas antes de ser avisado.
-    ask("alerta", "Sinal de alerta", "Primeiro, uma pergunta importante: você está com algum destes sinais de alerta agora?", [
-      opt("Dificuldade para respirar", true),
-      opt("Desmaio ou alteração importante de consciência", true),
-      opt("Sangramento intenso", true),
-      opt("Dor muito forte ou súbita", true),
-      opt("Nenhum desses"),
-    ]),
+    alertaQuestion(),
     freeText("Se preferir, descreva com suas palavras o que você está sentindo e eu organizo para você. É opcional.", ["motivo", "inicio", "evolucao"]),
     ask("motivo", "Motivo principal", "Qual é o principal problema que você está sentindo?",
       opts("Dor", "Febre", "Tosse ou dificuldade respiratória", "Náusea/vômito", "Outro")),
@@ -145,7 +155,7 @@ const flows = {
         "Atendimento de urgência",
         "Se o problema não pode esperar uma consulta marcada:",
         [
-          `Risco de vida (dificuldade para respirar, desmaio, sangramento intenso, dor muito forte ou súbita): ligue agora para o SAMU (${SAMU}).`,
+          `Risco de vida (dificuldade para respirar, dor no peito, desmaio, convulsão, sinais de AVC, sangramento intenso, dor muito forte ou súbita): ligue agora para o SAMU (${SAMU}).`,
           "Sem risco imediato, mas precisando de avaliação rápida: procure uma UPA 24h ou o pronto atendimento/pronto-socorro mais próximo.",
           "Nesses serviços, a equipe faz uma triagem (classificação de risco) e atende pela gravidade, não pela ordem de chegada.",
           "Se puder, leve documento com foto, Cartão SUS e a lista dos medicamentos em uso, e vá acompanhado(a).",
@@ -180,6 +190,7 @@ const flows = {
   ],
   organizar: [
     info("Vamos montar um resumo simples para você levar à consulta."),
+    alertaQuestion(),
     ask("motivo", "Motivo principal", "Qual é o principal sintoma ou motivo da consulta?",
       opts("Dor", "Febre", "Tosse", "Outro")),
     ask("inicio", "Tempo de início", "Quando começou?",
@@ -211,6 +222,8 @@ function addMsg(text, who = "bot") {
   const d = document.createElement("div");
   d.className = "msg " + who;
   d.textContent = text;
+  // avisos de emergência interrompem o leitor de tela na hora
+  if (who.includes("emergency")) d.setAttribute("role", "alert");
   chatBox().appendChild(d);
   chatBox().scrollTop = chatBox().scrollHeight;
 }
@@ -219,6 +232,7 @@ function openChat(mode) {
   state.mode = mode;
   state.step = 0;
   state.answers = [];
+  state.confirming = false;
   cancelAi();
   show("chat", false); // o foco vai para a primeira opção, em nextStep()
   chatBox().innerHTML = "";
@@ -264,11 +278,15 @@ function nextStep() {
 }
 
 // "Pergunta 2 de 5" e a barra fina no topo do chat.
-function updateProgress() {
-  const total = flows[state.mode].filter((i) => i.type === "question").length;
-  const current = Math.min(state.answers.length + 1, total);
-  document.getElementById("progressLabel").textContent = `Pergunta ${current} de ${total}`;
-  document.getElementById("progressBar").style.width = `${(state.answers.length / total) * 100}%`;
+// Conta perguntas já passadas no fluxo (pela posição), e não respostas: a IA pode responder várias de uma vez.
+function updateProgress(optional = false) {
+  const flow = flows[state.mode];
+  const total = flow.filter((i) => i.type === "question").length;
+  const done = flow.slice(0, state.step).filter((i) => i.type === "question").length;
+  document.getElementById("progressLabel").textContent = optional
+    ? "Etapa opcional"
+    : `Pergunta ${Math.min(done + 1, total)} de ${total}`;
+  document.getElementById("progressBar").style.width = `${Math.min(done / total, 1) * 100}%`;
 }
 
 function focusFirstOption() {
@@ -277,7 +295,7 @@ function focusFirstOption() {
 }
 
 function updateBackButton() {
-  document.getElementById("backBtn").disabled = state.answers.length === 0;
+  document.getElementById("backBtn").disabled = state.answers.length === 0 && !state.confirming;
 }
 
 function choose(question, option) {
@@ -294,27 +312,30 @@ function choose(question, option) {
   });
   state.step++;
   if (option.redFlag) {
-    showEmergency();
+    if (option.cvv) showEmergency(EMERGENCY_CVV_TEXT, true, true);
+    else showEmergency();
     return;
   }
   nextStep();
 }
 
 // Interrompe a conversa: mostra o aviso e deixa a pessoa decidir se quer continuar.
-function showEmergency(text = EMERGENCY_CHAT_TEXT, withCvv = false) {
+// cvvFirst: no caso de pensamentos de se machucar, o CVV vem como botão principal.
+function showEmergency(text = EMERGENCY_CHAT_TEXT, withCvv = false, cvvFirst = false) {
   addMsg(text, "bot emergency");
 
-  const call = document.createElement("a");
-  call.className = "call";
-  call.href = "tel:" + SAMU;
-  call.innerHTML = `${PHONE_ICON} Ligar para o SAMU (${SAMU})`;
-
-  let cvv = null;
-  if (withCvv) {
-    cvv = document.createElement("a");
-    cvv.className = "call secondary-call";
-    cvv.href = "tel:" + CVV;
-    cvv.innerHTML = `${PHONE_ICON} Ligar para o CVV (${CVV})`;
+  const makeCall = (number, name, secondary) => {
+    const a = document.createElement("a");
+    a.className = secondary ? "call secondary-call" : "call";
+    a.href = "tel:" + number;
+    a.innerHTML = `${PHONE_ICON} Ligar para o ${name} (${number})`;
+    return a;
+  };
+  let call = makeCall(SAMU, "SAMU", false);
+  let cvv = withCvv ? makeCall(CVV, "CVV", true) : null;
+  if (cvvFirst) {
+    call = makeCall(CVV, "CVV", false);
+    cvv = makeCall(SAMU, "SAMU", true);
   }
 
   const hasMore = flows[state.mode].slice(state.step).some((item) => item.type === "question");
@@ -336,6 +357,15 @@ function showEmergency(text = EMERGENCY_CHAT_TEXT, withCvv = false) {
 
 // Volta uma pergunta: apaga a última resposta e as mensagens que vieram depois dela.
 function goBack() {
+  // Na tela "Confira se está correto", voltar reabre a caixa de texto (o relato ainda não virou resposta).
+  if (state.confirming) {
+    state.confirming = false;
+    cancelAi();
+    while (chatBox().children.length > state.mark) chatBox().removeChild(chatBox().lastChild);
+    optionsBox().innerHTML = "";
+    nextStep();
+    return;
+  }
   const last = state.answers.pop();
   if (!last) return;
   // respostas vindas da IA entram em lote: voltar desfaz o lote inteiro
@@ -362,6 +392,7 @@ function restartChat() {
 // ---------- Resumo ----------
 function finish() {
   optionsBox().innerHTML = "";
+  updateProgressDone();
 
   const html = state.answers
     .map((a) => `<div class="summary-row"><strong>${escapeHtml(a.label)}</strong><span>${escapeHtml(a.value)}</span></div>`)
@@ -384,6 +415,11 @@ function finish() {
   // Em emergência, o foco vai direto para o aviso; senão, para o título do resumo.
   const banner = emergency ? document.querySelector("#urgency .emergency") : null;
   show("result", banner || undefined);
+}
+
+function updateProgressDone() {
+  document.getElementById("progressLabel").textContent = "Concluído";
+  document.getElementById("progressBar").style.width = "100%";
 }
 
 function renderGuide(g) {
@@ -415,13 +451,14 @@ function aiEnabled() {
 const sem = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const SINAIS_DE_ALERTA = [
   /nao consigo respirar|sem conseguir respirar|falta de ar|dificuldade (para|pra|de) respirar|dificuldade respiratoria|sufoc|asfixi|engasg/,
-  /desmai|perdi a consciencia|perdeu a consciencia|apagou|nao acorda|nao reage|muito confus/,
+  /desmai|perdi a consciencia|perdeu a consciencia|apagou|nao acorda|nao reage|muito confus|confusao mental/,
   /hemorragia|sangramento (intenso|forte|que nao para)|sangrando muito|vomit\w* sangue|tossindo sangue|tossi sangue/,
-  /dor (forte |intensa )?no peito|aperto no peito|pressao no peito|dor no coracao/,
-  /dor (muito |extremamente )?(forte|intensa)|dor insuportavel|dor subita|pior dor da (minha )?vida/,
-  /convuls|rosto torto|boca torta|fala enrolada|fraqueza (de um lado|no lado)|nao consigo falar/,
-  /overdose|envenen|tomei (muitos|varios) (remedios|comprimidos)/,
-  /me matar|suicid|quero morrer|tirar (a )?minha vida|acabar com (tudo|a minha vida)|me machucar|me ferir|automutil/,
+  /dor (forte |intensa )?no peito|aperto no peito|pressao no peito|dor no coracao|peito apertado/,
+  // "dor forte" e também "dor de cabeça muito forte", "dor na barriga insuportável", "dor súbita" etc.
+  /dor (forte|intensa)|dor\b(\s+\S+){0,3}\s+(muito|extremamente|super) (forte|intensa)|dor\b(\s+\S+){0,3}\s+(insuportavel|subita|repentina)|pior dor da (minha )?vida/,
+  /convuls|rosto torto|boca torta|fala enrolada|fraqueza (de um lado|no lado|em um lado)|formigamento (de um lado|no lado|em um lado)|nao consigo falar|perdi a visao|parei de enxergar/,
+  /overdose|envenen|intoxica|tomei (muitos|varios) (remedios|comprimidos)|tomei uma cartela/,
+  /me matar|suicid|quero morrer|nao quero mais viver|tirar (a )?minha (propria )?vida|acabar com (tudo|a minha vida)|me machucar|me ferir|me cortar|automutil|sumir de vez/,
 ];
 // Rede de segurança local e imperfeita: pega frases comuns, mas não substitui bom senso nem ligar para o SAMU.
 function detectaSinalDeAlerta(texto) {
@@ -448,7 +485,7 @@ async function organizarRelato(texto) {
     const resp = await fetch(AI_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto }),
+      body: JSON.stringify({ texto, captcha: captcha.token || undefined }),
       signal: controle.signal,
     });
     if (resp.status === 404 || resp.status === 405) state.aiUnavailable = true; // site sem a função: não oferece de novo
@@ -477,8 +514,9 @@ function showAiBox(item) {
   setAiStatus("");
   updateAiSendState();
   updateBackButton();
-  updateProgress();
+  updateProgress(true);
   scrollChatToEnd();
+  prepareCaptcha();
   $("aiText").focus();
 }
 
@@ -502,6 +540,7 @@ function cancelAi() {
   state.aiBusy = false;
   state.aiItem = null;
   hideAiBox();
+  resetCaptcha();
 }
 
 function setAiStatus(msg) {
@@ -509,7 +548,8 @@ function setAiStatus(msg) {
 }
 
 function updateAiSendState() {
-  const ok = $("aiConsent").checked && $("aiText").value.trim().length >= 3 && !state.aiBusy;
+  const captchaOk = !captcha.siteKey || Boolean(captcha.token);
+  const ok = $("aiConsent").checked && $("aiText").value.trim().length >= 3 && !state.aiBusy && captchaOk;
   $("aiSend").disabled = !ok;
 }
 
@@ -594,6 +634,7 @@ function mostrarConfirmacao(item, d) {
   const corrigir = document.createElement("button");
   corrigir.textContent = "Corrigir pelas perguntas";
   corrigir.onclick = () => {
+    state.confirming = false;
     optionsBox().innerHTML = "";
     addMsg("Corrigir pelas perguntas", "user");
     state.step++;
@@ -602,6 +643,7 @@ function mostrarConfirmacao(item, d) {
 
   optionsBox().innerHTML = "";
   optionsBox().setAttribute("aria-label", "Confirmar o que foi entendido do seu relato");
+  state.confirming = true;
   optionsBox().appendChild(ok);
   optionsBox().appendChild(corrigir);
   focusFirstOption();
@@ -609,6 +651,7 @@ function mostrarConfirmacao(item, d) {
 }
 
 function confirmarAi(item, d) {
+  state.confirming = false;
   optionsBox().innerHTML = "";
   addMsg("Está correto", "user");
   const lote = ++state.batch;
@@ -719,4 +762,81 @@ async function copySummary() {
   }
 }
 
+// ---------- Verificação anti-robô opcional (Cloudflare Turnstile) ----------
+// Só aparece se o servidor tiver a chave TURNSTILE_SITE_KEY configurada (veja LEIA-ME-IA.md).
+const captcha = { siteKey: null, loaded: false, widget: null, token: null, checked: false };
+
+async function loadCaptchaConfig() {
+  if (captcha.checked || !aiEnabled()) return;
+  captcha.checked = true;
+  try {
+    const r = await fetch("/api/config", { headers: { Accept: "application/json" } });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j && typeof j.turnstileSiteKey === "string" && j.turnstileSiteKey) captcha.siteKey = j.turnstileSiteKey;
+  } catch (e) {
+    // sem configuração: segue sem verificação
+  }
+}
+
+function loadTurnstileScript() {
+  return new Promise((resolve, reject) => {
+    if (window.turnstile) return resolve();
+    const s = document.createElement("script");
+    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function prepareCaptcha() {
+  await loadCaptchaConfig();
+  if (!captcha.siteKey || !state.aiItem) return;
+  const box = $("aiCaptcha");
+  box.hidden = false;
+  try {
+    await loadTurnstileScript();
+    if (captcha.widget !== null) {
+      window.turnstile.reset(captcha.widget);
+    } else {
+      captcha.widget = window.turnstile.render(box, {
+        sitekey: captcha.siteKey,
+        language: "pt-BR",
+        callback: (t) => { captcha.token = t; updateAiSendState(); },
+        "expired-callback": () => { captcha.token = null; updateAiSendState(); },
+        "error-callback": () => { captcha.token = null; updateAiSendState(); },
+      });
+    }
+  } catch (e) {
+    box.hidden = true;
+  }
+  updateAiSendState();
+}
+
+function resetCaptcha() {
+  captcha.token = null;
+  if (captcha.widget !== null && window.turnstile) window.turnstile.reset(captcha.widget);
+}
+
+// ---------- Botões da página (sem onclick no HTML, para permitir uma CSP rígida) ----------
+function bindPage() {
+  document.querySelectorAll("[data-chat]").forEach((b) => b.addEventListener("click", () => openChat(b.dataset.chat)));
+  const actions = {
+    home: goHome,
+    about: () => show("about"),
+    back: goBack,
+    restart: restartChat,
+    copy: copySummary,
+    review: reviewAnswers,
+    print: () => window.print(),
+  };
+  document.querySelectorAll("[data-action]").forEach((b) => {
+    const fn = actions[b.dataset.action];
+    if (fn) b.addEventListener("click", fn);
+  });
+}
+
+bindPage();
 bindAiBox();

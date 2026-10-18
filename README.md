@@ -1,21 +1,38 @@
-# MediAção — V1
+# MediAção — V4
 
-Projeto escolar: assistente de apoio ao atendimento em saúde.
+Projeto escolar: assistente de apoio ao atendimento em saúde. Não faz diagnóstico.
 
 ## Como executar
-Abra `index.html` em um navegador. Não precisa de servidor.
+- **Sem IA:** abra `index.html` no navegador. Tudo funciona, exceto o passo opcional "descreva com suas palavras".
+- **Com IA:** publique no Cloudflare Pages (veja `LEIA-ME-IA.md`).
 
 ## Estrutura
 - `index.html`: telas e conteúdo.
-- `style.css`: visual responsivo.
-- `script.js`: fluxo do chatbot e geração do resumo.
+- `style.css`: visual responsivo e estilo de impressão do resumo.
+- `script.js`: fluxo do chatbot, regras de sinais de alerta e geração do resumo.
+- `functions/api/organizar.js`: função do servidor que chama a IA (guarda a chave).
+- `functions/api/config.js`: entrega ao navegador a configuração pública (chave pública do Turnstile, se houver).
+- `_headers`: cabeçalhos de segurança (CSP etc.) usados pelo Cloudflare Pages.
+- `favicon.svg`: ícone da aba.
 
-## Limitações
-A V1 é uma demonstração local baseada em regras. Não faz diagnóstico e não envia dados para servidor.
+## Privacidade
+- Por padrão, os dados ficam somente no navegador e não são salvos.
+- Se a pessoa escolher o passo com IA (e aceitar o aviso), **o texto que ela escreve é enviado ao Google (Gemini, plano gratuito)**, que pode usá-lo para melhorar seus produtos. Por isso o site pede para não escrever dados pessoais reais.
+- Sinais de alerta são detectados por regras fixas; a IA só pode acrescentar cautela, nunca retirá-la.
+
+## Novidades da V4
+- Pergunta de sinais de alerta mais completa (dor no peito, AVC, convulsão, pensamentos de se machucar com CVV 188) e presente também em "Organizar meus sintomas".
+- Detecção de alertas no texto livre ampliada.
+- "Voltar uma pergunta" na confirmação da IA volta para a caixa de texto.
+- Progresso mostra "Etapa opcional" no passo da IA e não salta.
+- Avisos de emergência anunciados imediatamente por leitores de tela (`role="alert"`).
+- Verificação anti-robô opcional (Cloudflare Turnstile) para proteger a cota da IA.
+- Cabeçalhos de segurança (`_headers`) e remoção de `onclick` do HTML.
+- Botão "Imprimir / salvar PDF" e estilo de impressão.
+- Hierarquia de títulos corrigida, `<noscript>`, descrição, favicon e prévia para redes sociais.
+- No celular, o aviso "não diagnostica" aparece antes dos botões.
 
 ## Próximas versões
 - persistência local opcional;
-- acessibilidade aprimorada;
 - painel para profissionais;
-- base de informações oficiais;
-- integração com backend seguro, caso o projeto avance.
+- base de informações oficiais.
