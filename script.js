@@ -455,7 +455,7 @@ const SINAIS_DE_ALERTA = [
   /hemorragia|sangramento (intenso|forte|que nao para)|sangrando muito|vomit\w* sangue|tossindo sangue|tossi sangue/,
   /dor (forte |intensa )?no peito|aperto no peito|pressao no peito|dor no coracao|peito apertado/,
   // "dor forte" e também "dor de cabeça muito forte", "dor na barriga insuportável", "dor súbita" etc.
-  /dor (forte|intensa)|dor\b(\s+\S+){0,3}\s+(muito|extremamente|super) (forte|intensa)|dor\b(\s+\S+){0,3}\s+(insuportavel|subita|repentina)|pior dor da (minha )?vida/,
+  /dor (forte|intensa)|dor\b(\s+\S+){0,3}\s+(muito|extremamente|super) (forte|intensa)|dor\b(\s+\S+){0,3}\s+(insuportavel|subita|repentina)|pior dor(\s+\S+){0,3}\s+(da|na) (minha )?vida/,
   /convuls|rosto torto|boca torta|fala enrolada|fraqueza (de um lado|no lado|em um lado)|formigamento (de um lado|no lado|em um lado)|nao consigo falar|perdi a visao|parei de enxergar/,
   /overdose|envenen|intoxica|tomei (muitos|varios) (remedios|comprimidos)|tomei uma cartela/,
   /me matar|suicid|quero morrer|nao quero mais viver|tirar (a )?minha (propria )?vida|acabar com (tudo|a minha vida)|me machucar|me ferir|me cortar|automutil|sumir de vez/,

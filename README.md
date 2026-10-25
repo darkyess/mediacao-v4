@@ -36,3 +36,16 @@ Projeto escolar: assistente de apoio ao atendimento em saúde. Não faz diagnós
 - persistência local opcional;
 - painel para profissionais;
 - base de informações oficiais.
+
+## Revisão por profissional de saúde
+
+O conteúdo de saúde do site (sinais de alerta, mensagens de emergência, checklists, orientações por tipo de atendimento
+e instruções dadas à IA) pode ser exportado em um único documento para um profissional revisar:
+
+```
+node tools/exportar-revisao.mjs
+```
+
+Isso gera `docs/REVISAO-CLINICA.md`, sempre a partir do código atual. O documento também testa a rede de segurança do
+texto livre com frases de exemplo e **mostra as lacunas**. Depois da revisão, atualize o status na seção
+"Fontes e revisão" (tela Sobre, `id="reviewStatus"` no `index.html`) com nome, profissão e data, **somente com o consentimento do revisor**.
