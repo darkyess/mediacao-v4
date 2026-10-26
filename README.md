@@ -49,3 +49,16 @@ node tools/exportar-revisao.mjs
 Isso gera `docs/REVISAO-CLINICA.md`, sempre a partir do código atual. O documento também testa a rede de segurança do
 texto livre com frases de exemplo e **mostra as lacunas**. Depois da revisão, atualize o status na seção
 "Fontes e revisão" (tela Sobre, `id="reviewStatus"` no `index.html`) com nome, profissão e data, **somente com o consentimento do revisor**.
+
+## Perguntas para o profissional e serviços por perto
+
+No resumo, abaixo das orientações, o site mostra:
+
+- **Perguntas para fazer ao profissional**: lista fixa (sem IA), conforme o tipo de consulta e o motivo informado, com caixinhas
+  para marcar. Entra no texto copiado e na impressão. Não dá diagnóstico nem indica remédio.
+- **Serviços perto de você**: botões que abrem o Google Maps em outra aba (UBS, UPA 24h, pronto-socorro, CEO, farmácia,
+  laboratório, conforme a situação). O link leva **só o tipo de serviço** (e a cidade, se a pessoa digitar). Nenhum sintoma,
+  resposta ou texto do resumo vai para o mapa.
+
+Quando a pessoa marca um sinal de alerta, **nenhum dos dois blocos aparece**: o foco é ligar para o SAMU (192) ou o CVV (188).
+As perguntas e os serviços também são exportados para o documento de revisão (`node tools/exportar-revisao.mjs`).

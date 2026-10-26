@@ -412,6 +412,9 @@ function finish() {
     ? '<div class="urgency emergency"><strong>Atenção:</strong> ' + EMERGENCY_RESULT_TEXT + '</div>'
     : '<div class="urgency"><strong>Orientação:</strong> este resumo não determina diagnóstico. Se os sintomas preocuparem você, procure avaliação de um profissional de saúde.</div>';
 
+  document.getElementById("questions").innerHTML = renderGuide(emergency ? null : perguntasGuide());
+  renderNearby(emergency ? [] : servicosPara(state.mode, state.answers));
+
   // Em emergência, o foco vai direto para o aviso; senão, para o título do resumo.
   const banner = emergency ? document.querySelector("#urgency .emergency") : null;
   show("result", banner || undefined);
@@ -433,6 +436,158 @@ function renderGuide(g) {
     .join("");
   const note = g.note ? `<p class="guide-note">${escapeHtml(g.note)}</p>` : "";
   return `<div class="guide"><h3>${escapeHtml(g.title)}</h3><p>${escapeHtml(g.intro)}</p><ul class="${g.kind}">${items}</ul>${note}</div>`;
+}
+
+// ---------- Perguntas para levar ao profissional e serviços por perto ----------
+// Tudo aqui é fixo e revisável (sem IA). As perguntas são para a pessoa FAZER ao profissional:
+// o site não responde a elas, não sugere remédios e não faz diagnóstico.
+
+const PERGUNTAS_SINTOMA = [
+  "O que pode estar causando isso?",
+  "Preciso fazer algum exame? Qual e para quê?",
+  "Quais sinais indicam que devo voltar ou procurar urgência antes da próxima consulta?",
+  "Posso continuar usando os medicamentos que já uso? Algum deve ser evitado agora?",
+  "Em quanto tempo devo melhorar e quando devo voltar para reavaliação?",
+];
+const PERGUNTAS_TEMA = {
+  dor: ["Como posso aliviar a dor com segurança, sem piorar o problema?"],
+  febre: ["A partir de qual temperatura, ou depois de quantos dias, devo procurar atendimento de novo?"],
+  respiracao: ["Preciso de algum exame, como raio-x, para avaliar a respiração?", "Quais sinais de falta de ar pedem atendimento imediato?"],
+  digestivo: ["O que posso comer e beber enquanto estiver assim?", "Quais sinais de desidratação devo observar?"],
+};
+const PERGUNTAS_PIORANDO = ["O que devo fazer se os sintomas continuarem piorando?"];
+const PERGUNTAS_CONSULTA = {
+  "Consulta de rotina": [
+    "Quais exames de rotina fazem sentido para a minha idade e o meu histórico?",
+    "Preciso atualizar alguma vacina?",
+    "Há algo no meu dia a dia (alimentação, sono, atividade física) que eu deva ajustar?",
+    "Quando devo voltar para o próximo acompanhamento?",
+  ],
+  "Acompanhar tratamento": [
+    "O tratamento está funcionando como esperado? Quando será reavaliado?",
+    "Quais efeitos colaterais são esperados e quais exigem que eu avise?",
+    "Posso tomar outros remédios, chás ou suplementos junto com o tratamento?",
+    "O que devo fazer se esquecer uma dose?",
+    "Preciso de exames de controle? Com que frequência?",
+  ],
+  "Levar resultado de exame": [
+    "O que o resultado significa no meu caso?",
+    "Algum valor está fora do esperado? Isso preocupa?",
+    "Preciso repetir o exame ou fazer outros?",
+    "O resultado muda algo no meu tratamento ou nos meus cuidados?",
+  ],
+};
+
+function temaDoMotivo(valor) {
+  const t = sem(valor || "");
+  if (/febre|temperatura|calafrio/.test(t)) return "febre";
+  if (/tosse|respir|falta de ar|catarro|chiado/.test(t)) return "respiracao";
+  if (/nausea|vomit|enjoo|diarreia|barriga|estomago|gastr/.test(t)) return "digestivo";
+  if (/dor|cabeca|dente|garganta|costas/.test(t)) return "dor";
+  return null;
+}
+
+// Em emergência não mostramos perguntas de consulta: o foco é ligar para o SAMU.
+function perguntasPara(modo, respostas) {
+  if (respostas.some((r) => r.redFlag)) return [];
+  const valor = (id) => (respostas.find((r) => r.id === id) || {}).value;
+  let lista = [];
+  if (modo === "sintomas" || modo === "organizar") {
+    lista = [
+      ...(PERGUNTAS_TEMA[temaDoMotivo(valor("motivo"))] || []),
+      ...(valor("evolucao") === "Sim" ? PERGUNTAS_PIORANDO : []),
+      ...PERGUNTAS_SINTOMA,
+    ];
+  } else if (modo === "consulta") {
+    const objetivo = valor("objetivo");
+    lista = objetivo === "Investigar um sintoma" ? PERGUNTAS_SINTOMA : PERGUNTAS_CONSULTA[objetivo] || [];
+  }
+  return [...new Set(lista)].slice(0, 7);
+}
+
+function perguntasGuide() {
+  const itens = perguntasPara(state.mode, state.answers);
+  if (!itens.length) return null;
+  return {
+    title: "Perguntas para fazer ao profissional",
+    intro: "Leve estas perguntas anotadas e marque as que já foram respondidas:",
+    items: itens,
+    kind: "checklist",
+    note: "São sugestões gerais para conversar com o profissional. Elas não indicam diagnóstico nem substituem a avaliação.",
+  };
+}
+
+// O termo de busca enviado ao mapa é só o TIPO de serviço (e a cidade, se a pessoa digitar). Nada do resumo vai junto.
+const SERVICOS = {
+  ubs: { label: "UBS (posto de saúde)", busca: "UBS Unidade Básica de Saúde" },
+  upa: { label: "UPA 24h", busca: "UPA 24 horas" },
+  pronto: { label: "Pronto-socorro ou hospital", busca: "pronto socorro hospital" },
+  ceo: { label: "CEO (dentista no SUS)", busca: "CEO Centro de Especialidades Odontológicas" },
+  odonto: { label: "Pronto atendimento odontológico", busca: "pronto atendimento odontológico" },
+  farmacia: { label: "Farmácia", busca: "farmácia" },
+  laboratorio: { label: "Laboratório de análises clínicas", busca: "laboratório de análises clínicas" },
+};
+const SERVICOS_PADRAO = { sintomas: ["ubs", "upa", "pronto"], organizar: ["ubs", "upa", "pronto"], consulta: ["ubs"], atendimento: ["ubs"] };
+const SERVICOS_POR_OPCAO = {
+  "Consulta de rotina": ["ubs"],
+  "Investigar um sintoma": ["ubs", "upa"],
+  "Acompanhar tratamento": ["ubs", "farmacia"],
+  "Levar resultado de exame": ["laboratorio", "ubs"],
+  "Problema sem sinais de emergência": ["ubs"],
+  "Sintoma que parece urgente": ["upa", "pronto"],
+  "Preciso de atendimento odontológico": ["ubs", "ceo", "odonto"],
+  "Dúvida administrativa/UBS": ["ubs"],
+};
+
+function servicosPara(modo, respostas) {
+  if (respostas.some((r) => r.redFlag)) return [];
+  let chaves = SERVICOS_PADRAO[modo] || ["ubs"];
+  if (modo === "consulta" || modo === "atendimento") {
+    const r = respostas.find((x) => SERVICOS_POR_OPCAO[x.value]);
+    if (r) chaves = SERVICOS_POR_OPCAO[r.value];
+  }
+  return chaves.map((k) => ({ chave: k, ...SERVICOS[k] }));
+}
+
+function limparLocal(v) {
+  return String(v || "").replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+}
+
+// Documentação: https://developers.google.com/maps/documentation/urls (api=1 é obrigatório)
+function mapsUrl(busca, local) {
+  const alvo = local ? `${busca} ${local}` : `${busca} perto de mim`;
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(alvo);
+}
+
+function linksServicos(lista, local) {
+  return lista
+    .map(
+      (s) =>
+        `<a href="${escapeHtml(mapsUrl(s.busca, local))}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.label)} <span aria-hidden="true">↗</span><span class="sr-only">(abre em outra aba)</span></a>`
+    )
+    .join("");
+}
+
+function renderNearby(lista) {
+  const box = document.getElementById("nearby");
+  state.nearby = lista;
+  if (!lista.length) {
+    box.innerHTML = "";
+    return;
+  }
+  box.innerHTML =
+    `<div class="nearby"><h3>Serviços perto de você</h3>` +
+    `<p>Abre o mapa em outra aba. O MediAção não vê a sua localização e não envia o seu resumo ao mapa.</p>` +
+    `<div id="nearbyLinks" class="nearby-links">${linksServicos(lista, "")}</div>` +
+    `<label class="nearby-label" for="nearCity">Cidade ou bairro (opcional)</label>` +
+    `<input id="nearCity" class="nearby-input" type="text" maxlength="60" autocomplete="off" placeholder="Ex.: bairro ou cidade">` +
+    `<p class="nearby-note">Se o mapa não mostrar resultados perto de você, digite sua cidade ou bairro. Confirme o horário e se o serviço atende pelo SUS antes de ir. Em urgência, ligue para o SAMU (${SAMU}).</p></div>`;
+  const campo = document.getElementById("nearCity");
+  if (campo) {
+    campo.oninput = () => {
+      document.getElementById("nearbyLinks").innerHTML = linksServicos(state.nearby, limparLocal(campo.value));
+    };
+  }
 }
 
 function escapeHtml(s) {
@@ -691,6 +846,12 @@ function buildSummaryText() {
     lines.push("", g.title, g.intro);
     g.items.forEach((item) => lines.push((g.kind === "checklist" ? "[ ] " : "- ") + item));
     if (g.note) lines.push("", g.note);
+  }
+
+  const q = perguntasGuide();
+  if (q) {
+    lines.push("", q.title);
+    q.items.forEach((item) => lines.push("[ ] " + item));
   }
 
   lines.push("", "Este resumo é apenas informativo e não substitui a avaliação de um profissional de saúde.");

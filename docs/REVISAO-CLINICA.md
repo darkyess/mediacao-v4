@@ -264,3 +264,98 @@ Observação do desenvolvedor: são páginas-guia oficiais, **não** foram usada
 | Parecer geral | ☐ Aprovado   ☐ Aprovado com ajustes   ☐ Não recomendo o uso |
 
 Com a aprovação, o projeto poderá indicar no site: *"Conteúdo revisado por [nome], [profissão/registro], em [data]"*. Só será publicado com o seu consentimento.
+
+---
+
+## Anexo A. Perguntas sugeridas para a pessoa levar ao profissional
+
+*(Preencha a identificação da seção 11 depois de revisar os anexos.)*
+
+Aparecem no resumo, abaixo das orientações, como lista com caixinhas; também entram no texto copiado e na impressão. São **fixas** (não geradas por IA) e são perguntas para a pessoa **fazer ao profissional**: o site não responde a elas, não sugere remédios e não faz diagnóstico. Quando há sinal de alerta, elas **não aparecem**. No máximo 7 perguntas por resumo.
+
+### A.1 Fluxos "Estou com sintomas" e "Organizar meus sintomas"
+
+**Perguntas-base (sempre):**
+
+- O que pode estar causando isso?
+- Preciso fazer algum exame? Qual e para quê?
+- Quais sinais indicam que devo voltar ou procurar urgência antes da próxima consulta?
+- Posso continuar usando os medicamentos que já uso? Algum deve ser evitado agora?
+- Em quanto tempo devo melhorar e quando devo voltar para reavaliação?
+
+**Perguntas específicas por tema** (entram antes das perguntas-base, conforme as palavras do motivo informado):
+
+| Tema | Perguntas acrescentadas | Revisão |
+|---|---|---|
+| Dor (inclui cabeça, dente, garganta, costas) | Como posso aliviar a dor com segurança, sem piorar o problema? | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Febre | A partir de qual temperatura, ou depois de quantos dias, devo procurar atendimento de novo? | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Tosse ou dificuldade respiratória | Preciso de algum exame, como raio-x, para avaliar a respiração? / Quais sinais de falta de ar pedem atendimento imediato? | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Náusea, vômito, diarreia, barriga ou estômago | O que posso comer e beber enquanto estiver assim? / Quais sinais de desidratação devo observar? | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+
+**Se a pessoa disser que está piorando**, acrescenta:
+
+- O que devo fazer se os sintomas continuarem piorando?
+
+Revisão das perguntas-base e da pergunta de piora: ☐ Aprovado   ☐ Ajustar   ☐ Remover   Comentário: ____________________________
+
+### A.2 Fluxo "Vou ao médico", por objetivo
+
+**Consulta de rotina**
+
+- Quais exames de rotina fazem sentido para a minha idade e o meu histórico?
+- Preciso atualizar alguma vacina?
+- Há algo no meu dia a dia (alimentação, sono, atividade física) que eu deva ajustar?
+- Quando devo voltar para o próximo acompanhamento?
+
+Revisão: ☐ Aprovado   ☐ Ajustar   ☐ Remover   Comentário: ____________________________
+
+**Investigar um sintoma**
+
+- O que pode estar causando isso?
+- Preciso fazer algum exame? Qual e para quê?
+- Quais sinais indicam que devo voltar ou procurar urgência antes da próxima consulta?
+- Posso continuar usando os medicamentos que já uso? Algum deve ser evitado agora?
+- Em quanto tempo devo melhorar e quando devo voltar para reavaliação?
+
+Revisão: ☐ Aprovado   ☐ Ajustar   ☐ Remover   Comentário: ____________________________
+
+**Acompanhar tratamento**
+
+- O tratamento está funcionando como esperado? Quando será reavaliado?
+- Quais efeitos colaterais são esperados e quais exigem que eu avise?
+- Posso tomar outros remédios, chás ou suplementos junto com o tratamento?
+- O que devo fazer se esquecer uma dose?
+- Preciso de exames de controle? Com que frequência?
+
+Revisão: ☐ Aprovado   ☐ Ajustar   ☐ Remover   Comentário: ____________________________
+
+**Levar resultado de exame**
+
+- O que o resultado significa no meu caso?
+- Algum valor está fora do esperado? Isso preocupa?
+- Preciso repetir o exame ou fazer outros?
+- O resultado muda algo no meu tratamento ou nos meus cuidados?
+
+Revisão: ☐ Aprovado   ☐ Ajustar   ☐ Remover   Comentário: ____________________________
+
+O fluxo "Qual atendimento procurar?" não mostra perguntas de consulta.
+
+**Perguntas ao revisor:** as perguntas são adequadas e compreensíveis? Alguma deveria ser retirada ou reescrita? Falta alguma pergunta importante para algum tema? O limite de 7 é adequado?
+
+## Anexo B. Serviços sugeridos (botões que abrem o mapa)
+
+No resumo, o bloco "Serviços perto de você" mostra botões que **abrem o Google Maps em outra aba**. O termo de busca enviado ao mapa é **só o tipo de serviço** (mais "perto de mim", ou a cidade/bairro se a própria pessoa digitar). **Nenhum sintoma, resposta ou texto do resumo vai para o mapa.** Quando há sinal de alerta, o bloco **não aparece**.
+
+| Situação | Serviços sugeridos | Termos de busca | Revisão |
+|---|---|---|---|
+| Estou com sintomas / Organizar meus sintomas | UBS (posto de saúde); UPA 24h; Pronto-socorro ou hospital | UBS Unidade Básica de Saúde; UPA 24 horas; pronto socorro hospital | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Consulta de rotina | UBS (posto de saúde) | UBS Unidade Básica de Saúde | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Investigar um sintoma | UBS (posto de saúde); UPA 24h | UBS Unidade Básica de Saúde; UPA 24 horas | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Acompanhar tratamento | UBS (posto de saúde); Farmácia | UBS Unidade Básica de Saúde; farmácia | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Levar resultado de exame | Laboratório de análises clínicas; UBS (posto de saúde) | laboratório de análises clínicas; UBS Unidade Básica de Saúde | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Problema sem sinais de emergência | UBS (posto de saúde) | UBS Unidade Básica de Saúde | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Sintoma que parece urgente | UPA 24h; Pronto-socorro ou hospital | UPA 24 horas; pronto socorro hospital | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Preciso de atendimento odontológico | UBS (posto de saúde); CEO (dentista no SUS); Pronto atendimento odontológico | UBS Unidade Básica de Saúde; CEO Centro de Especialidades Odontológicas; pronto atendimento odontológico | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Dúvida administrativa/UBS | UBS (posto de saúde) | UBS Unidade Básica de Saúde | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+
+**Perguntas ao revisor:** os serviços sugeridos fazem sentido para cada situação? Sugerir UPA/pronto-socorro a quem não marcou sinal de alerta é adequado? A farmácia deve aparecer em "Acompanhar tratamento"? Falta algum serviço (ex.: CAPS, maternidade, pronto atendimento infantil)?
