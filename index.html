@@ -68,8 +68,16 @@
         </div>
         <button class="ghost" data-action="home"><span aria-hidden="true">←</span> Início</button>
       </div>
-      <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
-      <div id="chatBox" class="chat-box" role="log" aria-live="polite" aria-label="Conversa com o MediAção" tabindex="0"></div>
+      <div id="progressTrack" class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+      <ol id="journeySteps" class="journey-steps" aria-label="Etapas desta conversa"></ol>
+      <div class="conversation-grid">
+        <div id="chatBox" class="chat-box" role="log" aria-live="polite" aria-label="Conversa com o MediAção" tabindex="0"></div>
+        <aside id="liveSummary" class="live-summary" hidden aria-labelledby="liveSummaryTitle">
+          <h3 id="liveSummaryTitle">Resumo em andamento</h3>
+          <p>Suas respostas aparecem aqui.</p>
+          <ul id="liveSummaryItems"></ul>
+        </aside>
+      </div>
       <div id="options" class="options" role="group" aria-label="Opções de resposta"></div>
       <div id="aiBox" class="ai-box" hidden>
         <p id="aiNotice" class="ai-notice"><strong>Demonstração escolar.</strong> O texto que você escrever será enviado a um serviço de IA do Google (plano gratuito), que pode usá-lo para melhorar seus produtos. Não escreva nome, documentos ou outros dados pessoais reais.</p>

@@ -241,6 +241,9 @@ function openChat(mode) {
 }
 
 function nextStep() {
+  document.getElementById("journeySteps").hidden = false;
+  document.getElementById("progressTrack").hidden = false;
+  renderLiveSummary();
   const item = flows[state.mode][state.step];
   if (!item) {
     finish();
@@ -283,10 +286,58 @@ function updateProgress(optional = false) {
   const flow = flows[state.mode];
   const total = flow.filter((i) => i.type === "question").length;
   const done = flow.slice(0, state.step).filter((i) => i.type === "question").length;
-  document.getElementById("progressLabel").textContent = optional
-    ? "Etapa opcional"
+  const current = flow[state.step];
+  const isOptional = optional || (current && current.type === "freeText");
+  document.getElementById("progressLabel").textContent = isOptional
+    ? "Etapa opcional · Relato livre"
     : `Pergunta ${Math.min(done + 1, total)} de ${total}`;
   document.getElementById("progressBar").style.width = `${Math.min(done / total, 1) * 100}%`;
+  renderJourneySteps(isOptional);
+}
+
+const ICONES_RESPOSTA = {
+  alerta: "⚠",
+  alerta_relato: "⚠",
+  motivo: "✚",
+  inicio: "◷",
+  evolucao: "↗",
+  observacoes: "▤",
+  objetivo: "◎",
+};
+
+function iconeDoCampo(id, alerta = false) {
+  return alerta ? "⚠" : ICONES_RESPOSTA[id] || "•";
+}
+
+function renderJourneySteps(isOptional = false, completed = false) {
+  const lista = document.getElementById("journeySteps");
+  const flow = flows[state.mode] || [];
+  const steps = flow
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => item.type === "question" || item.type === "freeText");
+  lista.innerHTML = steps.map(({ item, index }) => {
+    const done = completed || index < state.step;
+    const current = !completed && index === state.step;
+    const label = item.type === "freeText" ? "Relato livre (opcional)" : item.label;
+    const icon = item.type === "freeText" ? "✎" : iconeDoCampo(item.id);
+    const className = `journey-step${done ? " is-complete" : ""}`;
+    const currentAttr = current ? ' aria-current="step"' : "";
+    const shownIcon = done ? "✓" : icon;
+    return `<li class="${className}"${currentAttr}><span class="journey-step-icon" aria-hidden="true">${shownIcon}</span><span class="journey-step-label">${escapeHtml(label)}</span></li>`;
+  }).join("");
+  if (isOptional) {
+    document.getElementById("progressLabel").textContent = "Etapa opcional · Relato livre";
+  }
+}
+
+function renderLiveSummary() {
+  const box = document.getElementById("liveSummary");
+  const list = document.getElementById("liveSummaryItems");
+  const answers = state.answers;
+  box.hidden = answers.length === 0;
+  list.innerHTML = answers.map((answer) =>
+    `<li><span class="live-summary-icon" aria-hidden="true">${iconeDoCampo(answer.id, answer.redFlag)}</span><span><span class="live-summary-label">${escapeHtml(answer.label)}</span><span class="live-summary-value">${escapeHtml(answer.value)}</span></span></li>`
+  ).join("");
 }
 
 function focusFirstOption() {
@@ -322,6 +373,9 @@ function choose(question, option) {
 // Interrompe a conversa: mostra o aviso e deixa a pessoa decidir se quer continuar.
 // cvvFirst: no caso de pensamentos de se machucar, o CVV vem como botão principal.
 function showEmergency(text = EMERGENCY_CHAT_TEXT, withCvv = false, cvvFirst = false) {
+  document.getElementById("journeySteps").hidden = true;
+  document.getElementById("progressTrack").hidden = true;
+  document.getElementById("liveSummary").hidden = true;
   addMsg(text, "bot emergency");
 
   const makeCall = (number, name, secondary) => {
@@ -395,7 +449,7 @@ function finish() {
   updateProgressDone();
 
   const html = state.answers
-    .map((a) => `<div class="summary-row"><strong>${escapeHtml(a.label)}</strong><span>${escapeHtml(a.value)}</span></div>`)
+    .map((a) => `<div class="summary-row"><span class="summary-icon" aria-hidden="true">${iconeDoCampo(a.id, a.redFlag)}</span><strong>${escapeHtml(a.label)}</strong><span class="summary-value">${escapeHtml(a.value)}</span></div>`)
     .join("");
   const aiLabels = state.answers.filter((a) => a.ai).map((a) => a.label);
   const aiNote = aiLabels.length
@@ -424,6 +478,7 @@ function finish() {
 function updateProgressDone() {
   document.getElementById("progressLabel").textContent = "Concluído";
   document.getElementById("progressBar").style.width = "100%";
+  renderJourneySteps(false, true);
 }
 
 function renderGuide(g) {
