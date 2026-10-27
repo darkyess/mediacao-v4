@@ -62,3 +62,15 @@ No resumo, abaixo das orientações, o site mostra:
 
 Quando a pessoa marca um sinal de alerta, **nenhum dos dois blocos aparece**: o foco é ligar para o SAMU (192) ou o CVV (188).
 As perguntas e os serviços também são exportados para o documento de revisão (`node tools/exportar-revisao.mjs`).
+
+## Diário de sintomas
+
+Função **opcional** (`diario.js`): a pessoa anota como está ao longo dos dias (sintoma, data e hora, como está, intensidade de 0 a 10,
+temperatura e observações) e leva o histórico para a consulta, copiando o texto ou imprimindo.
+
+- **Privacidade:** os registros ficam só no `localStorage` do navegador e **só depois que a pessoa ativa o diário** marcando um
+  consentimento. Nada é enviado a servidor nem à IA; o arquivo `diario.js` não tem nenhuma chamada de rede (há teste automático para isso).
+- **Controle:** apagar um registro ou o diário inteiro sempre pede confirmação. Dados ilegíveis nunca são apagados sozinhos.
+- **Sem interpretação:** o diário só guarda, mostra e exporta. Não calcula tendência nem sugere condutas.
+- **A partir do resumo:** o botão "Salvar no diário" aparece só nos fluxos de sintomas e **nunca** quando há sinal de alerta.
+- Os campos e os textos do diário também vão para o documento de revisão (`node tools/exportar-revisao.mjs`, Anexo C).

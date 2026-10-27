@@ -20,7 +20,7 @@
     <svg class="mark" viewBox="0 0 32 24" width="32" height="24" aria-hidden="true"><circle class="c1" cx="11" cy="12" r="9"/><circle class="c2" cx="21" cy="12" r="9"/></svg>
     <span class="wordmark">MediAção</span>
   </div>
-  <div class="badge">Projeto escolar • V4</div>
+  <div class="badge">Projeto escolar • V7</div>
 </header>
 
 <noscript><div class="noscript">O MediAção precisa do JavaScript ativado no navegador para funcionar. Em caso de emergência, ligue para o SAMU (192).</div></noscript>
@@ -50,6 +50,10 @@
         <button data-chat="organizar">
           <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 3h6v3H9zM9 11h6M9 15h6"/></svg>
           <span>Organizar meus sintomas</span>
+        </button>
+        <button data-diary="open">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v14A1.5 1.5 0 0 1 17 20.5H6zM6 3.5v17M9.5 8h5M9.5 12h5"/></svg>
+          <span>Diário de sintomas</span>
         </button>
       </div>
     </div>
@@ -104,6 +108,7 @@
           <button class="primary" data-action="copy">Copiar resumo</button>
           <button data-action="review">Corrigir respostas</button>
           <button data-action="print">Imprimir / salvar PDF</button>
+          <button data-diary="save" id="diarySaveBtn" hidden>Salvar no diário</button>
           <button data-action="home">Voltar ao início</button>
         </div>
         <div id="copyStatus" class="copy-status" role="status" aria-live="polite"></div>
@@ -113,12 +118,80 @@
     </div>
   </section>
 
+  <section id="diary" class="screen">
+    <div class="diary">
+      <h2>Diário de sintomas</h2>
+      <p id="diaryPrintDate" class="diary-print-only"></p>
+      <p class="diary-intro">Anote como você está ao longo dos dias e leve o histórico para a consulta. O diário só guarda e mostra o que você escreve: ele não interpreta os registros nem diz o que fazer.</p>
+      <p class="diary-alert" id="diaryAlert"></p>
+
+      <div id="diaryUnavailable" hidden>
+        <p class="diary-box">Este navegador não permite guardar dados neste aparelho (isso acontece, por exemplo, em navegação privada). Sem isso, o diário não funciona.</p>
+      </div>
+
+      <div id="diaryBroken" hidden>
+        <p class="diary-box">Os dados do diário salvos neste aparelho não puderam ser lidos. Nada foi apagado automaticamente. Se quiser recomeçar, apague os dados do diário.</p>
+        <button type="button" id="diaryWipeBroken" class="diary-danger">Apagar dados do diário</button>
+      </div>
+
+      <div id="diaryOff" hidden>
+        <div class="diary-box">
+          <h3>Antes de ativar</h3>
+          <ul id="diaryPrivacyList"></ul>
+        </div>
+        <label class="diary-consent"><input type="checkbox" id="diaryConsent"><span>Entendi e quero ativar o diário neste aparelho.</span></label>
+        <button type="button" id="diaryEnable" class="diary-primary" disabled>Ativar diário</button>
+      </div>
+
+      <div id="diaryOn" hidden>
+        <fieldset class="diary-new">
+          <legend>Novo registro</legend>
+          <div class="diary-grid">
+            <div class="diary-field wide"><label for="dSintoma">Sintoma</label><input id="dSintoma" type="text" maxlength="80" autocomplete="off" placeholder="Ex.: dor de cabeça"></div>
+            <div class="diary-field"><label for="dQuando">Data e hora</label><input id="dQuando" type="datetime-local"></div>
+            <div class="diary-field"><label for="dTendencia">Como está (opcional)</label>
+              <select id="dTendencia"><option value="">Não informar</option><option>Melhor</option><option>Igual</option><option>Pior</option><option>Não sei</option></select></div>
+            <div class="diary-field"><label for="dIntensidade">Intensidade de 0 a 10 (opcional)</label>
+              <select id="dIntensidade"><option value="">Não informar</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+            <div class="diary-field"><label for="dTemperatura">Temperatura em °C (opcional)</label><input id="dTemperatura" type="text" inputmode="decimal" autocomplete="off" maxlength="6" placeholder="Ex.: 37,5"></div>
+            <div class="diary-field wide"><label for="dObs">Observações (opcional)</label><textarea id="dObs" rows="3" maxlength="300" placeholder="Ex.: piorou à noite; melhorou depois de descansar"></textarea></div>
+          </div>
+          <p id="diaryError" class="diary-error" role="alert"></p>
+          <button type="button" id="diarySaveEntry" class="diary-primary">Salvar registro</button>
+        </fieldset>
+
+        <div class="diary-list-head"><h3>Seus registros</h3><span id="diaryCount"></span></div>
+        <div id="diaryChart"></div>
+        <ul id="diaryList" class="diary-list"></ul>
+
+        <div class="diary-actions diary-noprint">
+          <button type="button" id="diaryCopy">Copiar para a consulta</button>
+          <button type="button" id="diaryPrint">Imprimir / salvar PDF</button>
+          <button type="button" id="diaryWipe" class="diary-danger">Apagar tudo e desativar</button>
+        </div>
+      </div>
+
+      <div id="diaryWipeBox" class="diary-box diary-noprint" hidden>
+        <p><strong>Apagar o diário inteiro?</strong> Isso apaga todos os registros deste aparelho e desativa o diário. Não dá para desfazer.</p>
+        <div class="diary-actions">
+          <button type="button" id="diaryWipeYes" class="diary-danger">Sim, apagar tudo</button>
+          <button type="button" id="diaryWipeNo">Cancelar</button>
+        </div>
+      </div>
+
+      <div id="diaryStatus" class="diary-status" role="status" aria-live="polite"></div>
+      <div id="diaryFallback"></div>
+      <p class="small">Este diário é apenas informativo. Um profissional de saúde deve avaliar a situação.</p>
+      <div class="diary-actions diary-noprint"><button type="button" data-action="home">Voltar ao início</button></div>
+    </div>
+  </section>
+
   <section id="about" class="screen">
     <div class="about">
       <h2>Sobre o projeto</h2>
       <div class="info-grid">
         <article><h3>Objetivo</h3><p>Ajudar o usuário a organizar informações antes de procurar atendimento.</p></article>
-        <article><h3>Privacidade</h3><p>Por padrão, os dados ficam somente no navegador. Se você escolher o passo opcional com IA, o texto que escrever é enviado a um serviço de IA do Google (plano gratuito), que pode usá-lo para melhorar seus produtos. Por isso, não escreva dados pessoais reais.</p></article>
+        <article><h3>Privacidade</h3><p>Por padrão, os dados ficam somente no navegador. Se você escolher o passo opcional com IA, o texto que escrever é enviado a um serviço de IA do Google (plano gratuito), que pode usá-lo para melhorar seus produtos. Por isso, não escreva dados pessoais reais. O diário de sintomas, se você ativar, fica só neste aparelho e pode ser apagado a qualquer momento.</p></article>
         <article><h3>Limite da IA</h3><p>A IA só organiza o texto que você escreveu e você confere o resultado. Os sinais de alerta seguem regras fixas, e nada aqui faz diagnóstico médico.</p></article>
       </div>
 
@@ -163,9 +236,11 @@
 <footer>
   <nav aria-label="Navegação principal">
   <button data-action="home">Início</button>
+  <button data-diary="open">Diário</button>
   <button data-action="about">Sobre o projeto</button>
   </nav>
 </footer>
 <script src="script.js"></script>
+<script src="diario.js"></script>
 </body>
 </html>

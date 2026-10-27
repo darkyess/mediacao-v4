@@ -67,7 +67,7 @@ const flows = {
       opts("Dor", "Febre", "Tosse ou dificuldade respiratória", "Náusea/vômito", "Outro")),
     ask("inicio", "Tempo de início", "Há quanto tempo isso começou?",
       opts("Hoje", "Há 2–3 dias", "Há mais de uma semana", "Não sei")),
-    ask("evolucao", "Evolução", "O sintoma está piorando?",
+    ask("evolucao", "Piorando", "O sintoma está piorando?",
       opts("Sim", "Não", "Não sei")),
   ],
   consulta: [
@@ -413,6 +413,7 @@ function finish() {
     : '<div class="urgency"><strong>Orientação:</strong> este resumo não determina diagnóstico. Se os sintomas preocuparem você, procure avaliação de um profissional de saúde.</div>';
 
   document.getElementById("questions").innerHTML = renderGuide(emergency ? null : perguntasGuide());
+  if (typeof atualizarBotaoDiario === "function") atualizarBotaoDiario();
   renderNearby(emergency ? [] : servicosPara(state.mode, state.answers));
 
   // Em emergência, o foco vai direto para o aviso; senão, para o título do resumo.
@@ -813,7 +814,7 @@ function confirmarAi(item, d) {
   const base = { ai: true, batch: lote, step: state.step, mark: state.mark };
   state.answers.push({ id: "motivo", label: "Motivo principal", value: d.motivo, ...base });
   state.answers.push({ id: "inicio", label: "Tempo de início", value: d.inicio, ...base });
-  state.answers.push({ id: "evolucao", label: "Evolução", value: d.piorando, ...base });
+  state.answers.push({ id: "evolucao", label: "Piorando", value: d.piorando, ...base });
   if (d.observacoes) state.answers.push({ id: "observacoes", label: "Observações", value: d.observacoes, ...base });
 
   // pula as perguntas que o relato já respondeu

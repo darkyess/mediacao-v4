@@ -359,3 +359,59 @@ No resumo, o bloco "Serviços perto de você" mostra botões que **abrem o Googl
 | Dúvida administrativa/UBS | UBS (posto de saúde) | UBS Unidade Básica de Saúde | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
 
 **Perguntas ao revisor:** os serviços sugeridos fazem sentido para cada situação? Sugerir UPA/pronto-socorro a quem não marcou sinal de alerta é adequado? A farmácia deve aparecer em "Acompanhar tratamento"? Falta algum serviço (ex.: CAPS, maternidade, pronto atendimento infantil)?
+
+## Anexo C. Diário de sintomas (salvo só no aparelho)
+
+Funcionalidade **opcional**: a pessoa anota como está ao longo dos dias e leva o histórico para a consulta (copiando o texto ou imprimindo). **Os registros ficam só no navegador do aparelho, só depois que a pessoa ativa o diário marcando um consentimento.** Nada é enviado a servidor nem à IA (um teste automático verifica que o código do diário não faz nenhuma chamada de rede). A pessoa pode apagar um registro ou o diário inteiro, sempre com confirmação.
+
+O diário **não interpreta** os registros: não calcula tendência, não avisa que a pessoa piorou e não sugere o que fazer. Ele só guarda, mostra e exporta.
+
+**Texto de apresentação exibido na tela:** *Anote como você está ao longo dos dias e leve o histórico para a consulta. O diário só guarda e mostra o que você escreve: ele não interpreta os registros nem diz o que fazer.*
+
+**Aviso de sinais de alerta exibido no diário:** *Se surgir dificuldade para respirar, dor no peito, desmaio, sinais de AVC, sangramento intenso ou dor muito forte ou súbita, não espere: ligue para o SAMU (192).*
+
+**Texto exibido antes de ativar (privacidade):**
+
+- Os registros ficam salvos só neste aparelho, dentro do navegador. Não são enviados a nenhum servidor nem à IA.
+- Quem usar este aparelho e este navegador pode ver o diário. Em aparelho compartilhado, prefira não ativar ou apague depois.
+- Se você limpar os dados do navegador, o diário também é apagado.
+- Não escreva nome, documentos ou outros dados que identifiquem você.
+- Você pode apagar um registro ou o diário inteiro quando quiser.
+
+Revisão do texto de privacidade e do aviso: ☐ Aprovado   ☐ Ajustar   ☐ Remover   Comentário: ____________________________
+
+### C.1 Campos de cada registro
+
+| Campo | Regra | Revisão |
+|---|---|---|
+| Sintoma | Texto livre, obrigatório, até 80 caracteres | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Data e hora | Padrão: agora; pode ser anterior; não pode ser no futuro | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Como está | Opcional: Melhor, Igual, Pior, Não sei. ("Sem piora" só aparece quando o registro vem do resumo e a pessoa disse que não está piorando.) | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Intensidade | Opcional: número de 0 a 10 | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Temperatura | Opcional: de 30 a 45 °C | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+| Observações | Opcional, até 300 caracteres. O exemplo exibido é neutro e não cita remédios. | ☐ Aprovado   ☐ Ajustar   ☐ Remover |
+
+Limite: 365 registros por aparelho.
+
+### C.2 Registro criado a partir do resumo
+
+O resumo de sintomas tem o botão "Salvar no diário". Ele **não aparece** quando há sinal de alerta nem nos fluxos de consulta e atendimento. Se o diário ainda não foi ativado, a pessoa vê primeiro o texto de privacidade e só então o resumo é gravado. Correspondência: *piorando = Sim* vira "Pior"; *Não* vira "Sem piora"; *Não sei* vira "Não sei". O "início" informado entra nas observações (ex.: "Início: há 2–3 dias.").
+
+### C.3 Texto gerado para levar à consulta (exemplo com dados fictícios)
+
+```text
+MediAção: diário de sintomas
+Gerado em 12/03/2026. Registros: 2.
+
+10/03/2026, 08:30: dor de cabeça | como está: Igual | intensidade 5/10 | temperatura 37,2 °C
+   Observações: acordei com dor
+11/03/2026, 20:00: dor de cabeça | como está: Pior | intensidade 7/10
+
+Este diário é apenas informativo e não substitui a avaliação de um profissional de saúde.
+```
+
+O gráfico mostra só a intensidade (0 a 10) ao longo do tempo, com um resumo em texto ("de X em dd/mm para Y em dd/mm"), sem qualquer interpretação.
+
+Revisão dos campos, do texto exportado e do gráfico: ☐ Aprovado   ☐ Ajustar   ☐ Remover   Comentário: ____________________________
+
+**Perguntas ao revisor:** os campos são adequados e suficientes? Falta algo importante (ex.: local da dor, sono, apetite)? A escala de 0 a 10 e o intervalo de temperatura estão bons? Hoje **não há campo de medicamento, de propósito**, para não induzir a anotar doses nem a automedicação; isso é adequado? O texto de privacidade está claro para um público leigo? Deveria haver algum aviso automático (por exemplo, após vários dias com "Pior")? Hoje não há, de propósito, porque o diário não interpreta.

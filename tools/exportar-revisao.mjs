@@ -14,6 +14,7 @@ const el = () => new Proxy(function () {}, { get: (_, k) => (k === "children" ? 
 const ctx = { document: { getElementById: el, querySelectorAll: () => [], createElement: el, querySelector: () => null }, navigator: {}, window: {} };
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(raiz, "script.js"), "utf8"), ctx);
+vm.runInContext(fs.readFileSync(path.join(raiz, "diario.js"), "utf8"), ctx);
 const get = (expr) => vm.runInContext(expr, ctx);
 
 const flows = get("flows");
@@ -173,6 +174,37 @@ p("## Anexo B. Serviços sugeridos (botões que abrem o mapa)", "",
   `| Estou com sintomas / Organizar meus sintomas | ${linhaServ(PADRAO.sintomas)} | ${CAIXAS} |`,
   ...Object.entries(POR_OPCAO).map(([opcao, chaves]) => `| ${esc(opcao)} | ${linhaServ(chaves)} | ${CAIXAS} |`), "",
   "**Perguntas ao revisor:** os serviços sugeridos fazem sentido para cada situação? Sugerir UPA/pronto-socorro a quem não marcou sinal de alerta é adequado? A farmácia deve aparecer em \"Acompanhar tratamento\"? Falta algum serviço (ex.: CAPS, maternidade, pronto atendimento infantil)?", "");
+
+// ---- anexo C: diário de sintomas ----
+const htmlIndex = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
+const introDiario = (htmlIndex.match(/<p class="diary-intro">([^<]+)<\/p>/) || [])[1] || "";
+const exemplo = get(`diarioTexto([
+  {quando:"2026-03-10T08:30:00.000Z", sintoma:"dor de cabeça", tendencia:"Igual", intensidade:5, temperatura:37.2, obs:"acordei com dor"},
+  {quando:"2026-03-11T20:00:00.000Z", sintoma:"dor de cabeça", tendencia:"Pior", intensidade:7, temperatura:null, obs:""}
+], new Date(2026, 2, 12))`);
+
+p("## Anexo C. Diário de sintomas (salvo só no aparelho)", "",
+  "Funcionalidade **opcional**: a pessoa anota como está ao longo dos dias e leva o histórico para a consulta (copiando o texto ou imprimindo). **Os registros ficam só no navegador do aparelho, só depois que a pessoa ativa o diário marcando um consentimento.** Nada é enviado a servidor nem à IA (um teste automático verifica que o código do diário não faz nenhuma chamada de rede). A pessoa pode apagar um registro ou o diário inteiro, sempre com confirmação.", "",
+  "O diário **não interpreta** os registros: não calcula tendência, não avisa que a pessoa piorou e não sugere o que fazer. Ele só guarda, mostra e exporta.", "",
+  `**Texto de apresentação exibido na tela:** *${introDiario}*`, "",
+  `**Aviso de sinais de alerta exibido no diário:** *${get("SAMU_NOTE")}*`, "",
+  "**Texto exibido antes de ativar (privacidade):**", "", ...lista(get("DIARIO_PRIVACIDADE")), "",
+  `Revisão do texto de privacidade e do aviso: ${CAIXAS}   Comentário: ____________________________`, "",
+  "### C.1 Campos de cada registro", "",
+  "| Campo | Regra | Revisão |", "|---|---|---|",
+  `| Sintoma | Texto livre, obrigatório, até 80 caracteres | ${CAIXAS} |`,
+  `| Data e hora | Padrão: agora; pode ser anterior; não pode ser no futuro | ${CAIXAS} |`,
+  `| Como está | Opcional: ${get("DIARIO_TENDENCIAS").filter((t) => t !== "Sem piora").join(", ")}. ("Sem piora" só aparece quando o registro vem do resumo e a pessoa disse que não está piorando.) | ${CAIXAS} |`,
+  `| Intensidade | Opcional: número de 0 a 10 | ${CAIXAS} |`,
+  `| Temperatura | Opcional: de 30 a 45 °C | ${CAIXAS} |`,
+  `| Observações | Opcional, até 300 caracteres. O exemplo exibido é neutro e não cita remédios. | ${CAIXAS} |`, "",
+  `Limite: ${get("DIARIO_MAX_REGISTROS")} registros por aparelho.`, "",
+  "### C.2 Registro criado a partir do resumo", "",
+  "O resumo de sintomas tem o botão \"Salvar no diário\". Ele **não aparece** quando há sinal de alerta nem nos fluxos de consulta e atendimento. Se o diário ainda não foi ativado, a pessoa vê primeiro o texto de privacidade e só então o resumo é gravado. Correspondência: *piorando = Sim* vira \"Pior\"; *Não* vira \"Sem piora\"; *Não sei* vira \"Não sei\". O \"início\" informado entra nas observações (ex.: \"Início: há 2–3 dias.\").", "",
+  "### C.3 Texto gerado para levar à consulta (exemplo com dados fictícios)", "", "```text", exemplo, "```", "",
+  "O gráfico mostra só a intensidade (0 a 10) ao longo do tempo, com um resumo em texto (\"de X em dd/mm para Y em dd/mm\"), sem qualquer interpretação.", "",
+  `Revisão dos campos, do texto exportado e do gráfico: ${CAIXAS}   Comentário: ____________________________`, "",
+  "**Perguntas ao revisor:** os campos são adequados e suficientes? Falta algo importante (ex.: local da dor, sono, apetite)? A escala de 0 a 10 e o intervalo de temperatura estão bons? Hoje **não há campo de medicamento, de propósito**, para não induzir a anotar doses nem a automedicação; isso é adequado? O texto de privacidade está claro para um público leigo? Deveria haver algum aviso automático (por exemplo, após vários dias com \"Pior\")? Hoje não há, de propósito, porque o diário não interpreta.", "");
 
 fs.mkdirSync(path.join(raiz, "docs"), { recursive: true });
 fs.writeFileSync(path.join(raiz, "docs/REVISAO-CLINICA.md"), out.join("\n"), "utf8");
